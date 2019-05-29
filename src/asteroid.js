@@ -12,10 +12,11 @@ const initAsteroid = (cwidth, cheight, x, y, radius, direction) => {
     x: x ? x : Math.random() * cwidth,
     y: y ? y : Math.random() * cheight,
     direction: direction ? direction : Math.random() * 360,
-    speed: 100 + Math.random() * 200,
+    speed: -2.5 + Math.random() * 5,
     hit: false,
     spawnTimer: 10
   }
+  console.log(asteroid.speed)
 
   return asteroid
 }
@@ -26,8 +27,8 @@ const resetStartingPosition = (asteroid) => {
 }
 
 const moveAsteroid = (asteroid) => {
-  asteroid.x += Math.cos((Math.PI / 180) * asteroid.direction)
-  asteroid.y += Math.sin((Math.PI / 180) * asteroid.direction)
+  asteroid.x += Math.cos((Math.PI / 180) * asteroid.direction) * asteroid.speed
+  asteroid.y += Math.sin((Math.PI / 180) * asteroid.direction) * asteroid.speed
 
   if(asteroid.x < -(asteroid.radius * RADIUS_MULTIPLIER)) asteroid.x = CANVAS_WIDTH + (asteroid.radius * RADIUS_MULTIPLIER)
   if(asteroid.y < -(asteroid.radius * RADIUS_MULTIPLIER)) asteroid.y = CANVAS_HEIGHT + (asteroid.radius * RADIUS_MULTIPLIER)

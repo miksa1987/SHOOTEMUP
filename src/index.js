@@ -1,4 +1,5 @@
 import player, { shoot, initPlayer } from './player'
+import enemy from './enemy'
 import {moveAsteroid, initAsteroid, resetStartingPosition} from './asteroid'
 import {createExplosion} from './explosion'
 import {MAX_ASTEROIDS, RADIUS_MULTIPLIER} from './commons'
@@ -20,7 +21,7 @@ const distance = (x0, y0, x1, y1) => {
 
 const createAsteroids = () => {
   const asteroidsNumber =
-    MAX_ASTEROIDS / 2 + Math.random() * MAX_ASTEROIDS / 2
+    2 + Math.random() * MAX_ASTEROIDS + 2
   console.log(asteroidsNumber)
 
   for(let i = 0; i < asteroidsNumber; i++) {
@@ -38,7 +39,7 @@ const checkCollisions = () => {
       asteroids = []
       shots = []
       player.speed = { x: 0, y: 0 }
-      gameOn = false
+      //gameOn = false
     }
 
     shots.forEach(shot => {
@@ -51,7 +52,7 @@ const checkCollisions = () => {
         }
         asteroid.hit = true
         shot.hit = true
-        for(let i = 0; i < 10; i++) explosions.push(createExplosion(asteroid.x, asteroid.y, 4))
+        for(let i = 0; i < 40; i++) explosions.push(createExplosion(asteroid.x, asteroid.y, 2))
       }
     })
   })
@@ -60,7 +61,7 @@ const checkCollisions = () => {
 const removeHitObjects = () => {
   const filteredasteroids = asteroids.filter(asteroid => !asteroid.hit)
   const filteredshots = shots.filter(shot => !shot.hit)
-  const filteredexplosions = explosions.filter(explosion => explosion.timer < 27)
+  const filteredexplosions = explosions.filter(explosion => explosion.timer < 30)
   asteroids = filteredasteroids
   shots = filteredshots
   explosions = filteredexplosions
@@ -72,9 +73,17 @@ const update = () => {
   checkCollisions()
   removeHitObjects()
 
+  if(Math.random() < 0.01) {
+    const newAsteroid = initAsteroid(600, 600)
+    if(distance(newAsteroid.x, newAsteroid.y, player.x, player.y) < 150) resetStartingPosition(newAsteroid)
+    asteroids.push(initAsteroid(600, 600))
+  }
+
   if(player.speeding) {
     player.speed.x += player.SPEED * Math.cos(player.a) / FPS
     player.speed.y -= player.SPEED * Math.sin(player.a) / FPS
+
+    console.log(player.a)
   }
 
   player.x += player.speed.x
@@ -112,7 +121,7 @@ const draw = () => {
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
   ctx.strokeStyle = 'yellow'
-  ctx.lineWidth = 5
+  ctx.lineWidth = 25
   explosions.forEach(explosion => {
     if(explosion.timer > 5) ctx.strokeStyle = '#ffcc00'
     if(explosion.timer > 9) ctx.strokeStyle = '#ffaa00'
@@ -120,6 +129,7 @@ const draw = () => {
     if(explosion.timer > 17) ctx.strokeStyle = '#ff5500'
     if(explosion.timer > 21) ctx.strokeStyle = '#cc2200'
     if(explosion.timer > 25) ctx.strokeStyle = '#990000'
+    if(explosion.timer > 28) ctx.strokeStyle = '#550000'
     ctx.beginPath()
     ctx.arc(explosion.x, explosion.y, explosion.radius * 6.5, 0, 2 * Math.PI)
     ctx.stroke()
@@ -129,6 +139,7 @@ const draw = () => {
 
   //player
   ctx.strokeStyle = 'white'
+  ctx.fillStyle = 'white'
   ctx.lineWidth = 3
   ctx.beginPath()
   ctx.moveTo( // nose of the player
@@ -142,13 +153,16 @@ const draw = () => {
     player.y + player.r * (2 / 3 * Math.sin(player.a) + Math.cos(player.a)))
   ctx.closePath()
   ctx.stroke()
+  ctx.fill()
 
-  ctx.strokeStyle = 'red'
+  ctx.strokeStyle = 'brown'
+  ctx.fillStyle = 'brown'
   ctx.lineWidth = 3
   asteroids.forEach(asteroid => {
     ctx.beginPath()
     ctx.arc(asteroid.x, asteroid.y, asteroid.radius * 7, 0, 2 * Math.PI)
     ctx.stroke()
+    ctx.fill()
   })
 
   shots.forEach(shot => {
