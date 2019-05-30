@@ -1,16 +1,15 @@
-let CANVAS_WIDTH = 0
-let CANVAS_HEIGHT = 0
+import { CANVAS_WIDTH, CANVAS_HEIGHT, RADIUS_MULTIPLIER, distance } from './commons'
 
-const RADIUS_MULTIPLIER = 6.5
+const setCanvasSize = (w, h) => {
+  CANVAS_WIDTH = w
+  CANVAS_HEIGHT = h
+}
 
-const initAsteroid = (cwidth, cheight, x, y, radius, direction) => {
-  CANVAS_WIDTH = cwidth
-  CANVAS_HEIGHT = cheight
-
+const initAsteroid = (x, y, radius, direction) => {
   const asteroid = {
     radius: radius ? radius : 5,
-    x: x ? x : Math.random() * cwidth,
-    y: y ? y : Math.random() * cheight,
+    x: x ? x : Math.random() * CANVAS_WIDTH,
+    y: y ? y : Math.random() * CANVAS_HEIGHT,
     direction: direction ? direction : Math.random() * 360,
     speed: -2.5 + Math.random() * 5,
     hit: false,
@@ -21,7 +20,30 @@ const initAsteroid = (cwidth, cheight, x, y, radius, direction) => {
   return asteroid
 }
 
-const resetStartingPosition = (asteroid) => {
+// BAD IDEA
+const addCraters = (asteroid) => {
+  asteroid.craters = []
+  const number = Math.random() * 6
+  for(let i = 0; i < number; i++) {
+    asteroid.craters.push({
+      x: (asteroid.radius*RADIUS_MULTIPLIER/2) + Math.random() * distance(asteroid.x, asteroid.y, (asteroid.radius*RADIUS_MULTIPLIER), asteroid.y),
+      y: (asteroid.radius*RADIUS_MULTIPLIER/2) + Math.random() * distance(asteroid.x, asteroid.y, asteroid.x, (asteroid.radius*RADIUS_MULTIPLIER)),
+      radius: 0.6
+    })
+  }
+}
+
+const drawAsteroid = (asteroid, ctx) => {
+  ctx.strokeStyle = 'grey'
+  ctx.fillStyle = 'grey'
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.arc(asteroid.x, asteroid.y, asteroid.radius * 7, 0, 2 * Math.PI)
+  ctx.stroke()
+  ctx.fill()
+}
+
+const resetStartingPosition = (asteroid, ) => {
   asteroid.x = Math.random() * CANVAS_WIDTH
   asteroid.y = Math.random() * CANVAS_HEIGHT
 }
@@ -36,4 +58,4 @@ const moveAsteroid = (asteroid) => {
   if(asteroid.y > CANVAS_HEIGHT + (asteroid.radius * RADIUS_MULTIPLIER)) asteroid.y = -(asteroid.radius * RADIUS_MULTIPLIER)
 }
 
-export { initAsteroid, resetStartingPosition, moveAsteroid, RADIUS_MULTIPLIER }
+export { initAsteroid, resetStartingPosition, moveAsteroid, drawAsteroid, RADIUS_MULTIPLIER }

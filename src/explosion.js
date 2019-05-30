@@ -1,11 +1,27 @@
-import {CANVAS_WIDTH, CANVAS_HEIGHT, RADIUS_MULTIPLIER} from './commons'
+import {CANVAS_WIDTH, CANVAS_HEIGHT, RADIUS_MULTIPLIER, FPS} from './commons'
 
-const createExplosion = (x, y, radius) => {
+const createExplosion = (x, y, radius, speed, direction) => {
   return { x: x - 3 * radius * RADIUS_MULTIPLIER + Math.random() * 6 * radius * RADIUS_MULTIPLIER,
     y: y - 3 * radius * RADIUS_MULTIPLIER + Math.random() * 6 * radius * RADIUS_MULTIPLIER,
     radius: radius,
-    timer: Math.floor(Math.random() * 12)
+    timer: Math.floor(Math.random() * 12),
+    speed: speed ? speed : 0,
+    direction: direction ? direction : 0
   }
 }
 
-export { createExplosion }
+const moveExplosion = (explosion) => {
+  explosion.x -= explosion.speed * Math.cos(explosion.direction) / FPS
+  explosion.y -= explosion.speed * Math.cos(explosion.direction) / FPS
+
+  if(explosion.x < -(explosion.radius * RADIUS_MULTIPLIER)) explosion.x = CANVAS_WIDTH + (explosion.radius * RADIUS_MULTIPLIER)
+  if(explosion.y < -(explosion.radius * RADIUS_MULTIPLIER)) explosion.y = CANVAS_HEIGHT + (explosion.radius * RADIUS_MULTIPLIER)
+  if(explosion.x > CANVAS_WIDTH + (explosion.radius * RADIUS_MULTIPLIER)) explosion.x = -(explosion.radius * RADIUS_MULTIPLIER)
+  if(explosion.y > CANVAS_HEIGHT + (explosion.radius * RADIUS_MULTIPLIER)) explosion.y = -(explosion.radius * RADIUS_MULTIPLIER)
+}
+
+const drawExplosion = (explosion, ctx) => {
+
+}
+
+export { createExplosion, moveExplosion, drawExplosion }

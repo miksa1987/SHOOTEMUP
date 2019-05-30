@@ -8,6 +8,7 @@ const player = {
   rotation: 0,
   speeding: false,
   speed: { x: 0, y: 0 },
+  powerup: null,
   FRICTION: 0.1,
   TURNSPEED: 150,
   SPEED: 10
@@ -18,10 +19,11 @@ const shoot = () => {
     direction: player.a,
     x: player.x,
     y: player.y,
-    speed: 250,
+    speed: 650,
     timer: 0,
     hit: false
   }
+
 
   return shot
 }
