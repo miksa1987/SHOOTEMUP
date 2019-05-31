@@ -1,8 +1,7 @@
-import player, { shoot, initPlayer } from './player'
+import playership, {player} from './player'
 import enemy from './enemy'
-import {moveAsteroid, initAsteroid, resetStartingPosition, drawAsteroid} from './asteroid'
-import {createExplosion, moveExplosion} from './explosion'
-import {initEnemy, moveEnemy, trackPlayer, drawEnemy, enemyShoot} from './enemy'
+import asteroid from './asteroid'
+import explosion from './explosion'
 import powerup from './powerup'
 
 import {MAX_ASTEROIDS, RADIUS_MULTIPLIER, setCanvasSize} from './commons'
@@ -39,11 +38,11 @@ const createAsteroids = () => {
   console.log(asteroidsNumber)
 
   for(let i = 0; i < asteroidsNumber; i++) {
-    asteroids.push(initAsteroid())
+    asteroids.push(asteroid.initAsteroid())
   }
 
-  asteroids.forEach(asteroid => {
-    if(distance(asteroid.x, asteroid.y, player.x, player.y) < 200) resetStartingPosition(asteroid)
+  asteroids.forEach(roid => {
+    if(distance(roid.x, roid.y, player.x, player.y) < 200) asteroid.resetStartingPosition(roid)
   })
 }
 
@@ -59,7 +58,7 @@ const resetGame = () => {
   player.speed = { x: 0, y: 0 }
   score = 0
   createAsteroids()
-  initPlayer()
+  playership.initPlayer()
 
   // FOR DEBUGGING
   player.powerup = 'shotgun'
@@ -73,6 +72,7 @@ const checkCollisions = () => {
   enemyshots.forEach(shot => {
     if(distance(player.x, player.y, shot.x, shot.y) < 10) {
       resetGame()
+      for(let i = 0; i < 30 + Math.random() * 40; i++) explosions.push(explosion.createExplosion(enemy.x, enemy.y, 2.5))
     }
   })
   enemies.forEach(enemy => {
@@ -81,66 +81,52 @@ const checkCollisions = () => {
         enemy.hit = true
         shot.hit = true
         score += 1000
-        if(Math.random() < 0.99999999) {
-          const newPowerup = Object.create(powerup)
-          newPowerup.x = enemy.x
-          newPowerup.y = enemy.y
-          newPowerup.type = 'shotgun'
-          powerups.push(newPowerup)
-          console.log(powerups)
-        }
-        for(let i = 0; i < 30 + Math.random() * 20; i++) explosions.push(createExplosion(enemy.x, enemy.y, 1.5))
+
+        for(let i = 0; i < 30 + Math.random() * 20; i++) explosions.push(explosion.createExplosion(enemy.x, enemy.y, 1.5))
       }
     })
     enemyshots.forEach(shot => {
       if(distance(shot.x, shot.y, enemy.x, enemy.y) < enemy.radius * RADIUS_MULTIPLIER && shot.timer > 5) {
         enemy.hit = true
         shot.hit = true
-        if(Math.random() < 0.99999999) {
-          const newPowerup = Object.create(powerup)
-          newPowerup.x = enemy.x
-          newPowerup.y = enemy.y
-          newPowerup.type = 'shotgun'
-          powerups.push(newPowerup)
-          console.log(powerups)
-        }
-        for(let i = 0; i < 30 + Math.random() * 20; i++) explosions.push(createExplosion(enemy.x, enemy.y, 1.5))
+        for(let i = 0; i < 30 + Math.random() * 20; i++) explosions.push(explosion.createExplosion(enemy.x, enemy.y, 1.5))
       }
     })
   })
-  asteroids.forEach(asteroid => {
-    if(distance(asteroid.x, asteroid.y, player.x, player.y) < asteroid.radius * 10) {
+  asteroids.forEach(roid => {
+    if(distance(roid.x, roid.y, player.x, player.y) < roid.radius * 10) {
       resetGame()
+      for(let i = 0; i < 30 + Math.random() * 40; i++) explosions.push(explosion.createExplosion(enemy.x, enemy.y, 2.5))
       //gameOn = false
     }
 
     shots.forEach(shot => {
-      if(distance(shot.x, shot.y, asteroid.x, asteroid.y) < asteroid.radius * 10) {
-        if(asteroid.radius > 2 && !asteroid.hit) {
-          asteroids.push(initAsteroid(asteroid.x, asteroid.y,
-            asteroid.radius - 1, Math.random() * 70))
-          asteroids.push(initAsteroid(asteroid.x, asteroid.y,
-            asteroid.radius - 1, 120 + Math.random() * 70))
+      if(distance(shot.x, shot.y, roid.x, roid.y) < roid.radius * 10) {
+        if(roid.radius > 2 && !roid.hit) {
+          asteroids.push(asteroid.initAsteroid(roid.x, roid.y,
+            roid.radius - 1, Math.random() * 70))
+          asteroids.push(asteroid.initAsteroid(roid.x, roid.y,
+            roid.radius - 1, 120 + Math.random() * 70))
         }
-        asteroid.hit = true
+        roid.hit = true
         shot.hit = true
 
         score += 50
-        for(let i = 0; i < 30 + Math.random() * 20; i++) explosions.push(createExplosion(asteroid.x, asteroid.y, 1.5))
+        for(let i = 0; i < 30 + Math.random() * 20; i++) explosions.push(explosion.createExplosion(roid.x, roid.y, 1.5))
       }
     })
     enemyshots.forEach(shot => {
-      if(distance(shot.x, shot.y, asteroid.x, asteroid.y) < asteroid.radius * 10) {
-        if(asteroid.radius > 2 && !asteroid.hit) {
-          asteroids.push(initAsteroid(asteroid.x, asteroid.y,
-            asteroid.radius - 1, Math.random() * 70))
-          asteroids.push(initAsteroid(asteroid.x, asteroid.y,
-            asteroid.radius - 1, 120 + Math.random() * 70))
+      if(distance(shot.x, shot.y, roid.x, roid.y) < roid.radius * 10) {
+        if(roid.radius > 2 && !roid.hit) {
+          asteroids.push(asteroid.initAsteroid(roid.x, roid.y,
+            roid.radius - 1, Math.random() * 70))
+          asteroids.push(asteroid.initAsteroid(roid.x, roid.y,
+            roid.radius - 1, 120 + Math.random() * 70))
         }
-        asteroid.hit = true
+        roid.hit = true
         shot.hit = true
 
-        for(let i = 0; i < 40; i++) explosions.push(createExplosion(asteroid.x, asteroid.y, 2))
+        for(let i = 0; i < 40; i++) explosions.push(explosion.createExplosion(roid.x, roid.y, 2))
       }
     })
   })
@@ -172,14 +158,14 @@ const update = () => {
   removeHitObjects()
 
   if(Math.random() < 0.01) {
-    const newAsteroid = initAsteroid()
-    if(distance(newAsteroid.x, newAsteroid.y, player.x, player.y) < 150) resetStartingPosition(newAsteroid)
+    const newAsteroid = asteroid.initAsteroid()
+    if(distance(newAsteroid.x, newAsteroid.y, player.x, player.y) < 150) asteroid.resetStartingPosition(newAsteroid)
 
     asteroids.push(newAsteroid)
   }
 
   if(Math.random() < 0.003) {
-    enemies.push(initEnemy())
+    enemies.push(enemy.init())
   }
 
   if(player.speeding) {
@@ -188,7 +174,7 @@ const update = () => {
     const random = Math.random() * 8
 
     for(let i = 0; i < random; i++) {
-      thrusterFlames.push(createExplosion(player.x, player.y, 0.3))
+      thrusterFlames.push(explosion.createExplosion(player.x, player.y, 0.3))
     }
   }
 
@@ -203,12 +189,12 @@ const update = () => {
   player.a += player.rotation
 
   explosions.forEach(explosion => explosion.timer++)
-  asteroids.forEach(asteroid => moveAsteroid(asteroid))
+  asteroids.forEach(roid => asteroid.moveAsteroid(roid))
 
-  enemies.forEach(enemy => {
-    trackPlayer(enemy)
-    moveEnemy(enemy)
-    if(Math.random() < 0.05) enemyshots.push(enemyShoot(enemy))
+  enemies.forEach(nemesis => {
+    enemy.trackPlayer(nemesis)
+    enemy.move(nemesis)
+    if(Math.random() < 0.05) enemyshots.push(enemy.shoot(nemesis))
   })
 
 
@@ -236,7 +222,7 @@ const update = () => {
   })
 
   thrusterFlames.forEach(flame => {
-    moveExplosion(flame)
+    explosion.moveExplosion(flame)
     flame.timer++
   })
 
@@ -248,34 +234,12 @@ const draw = () => {
   ctx.fillStyle = 'black'
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  ctx.strokeStyle = 'yellow'
-  ctx.lineWidth = 20
-  explosions.forEach(explosion => {
-    if(explosion.timer > 5) ctx.strokeStyle = '#ffcc00'
-    if(explosion.timer > 9) ctx.strokeStyle = '#ffaa00'
-    if(explosion.timer > 13) ctx.strokeStyle = '#ff8800'
-    if(explosion.timer > 17) ctx.strokeStyle = '#ff5500'
-    if(explosion.timer > 21) ctx.strokeStyle = '#cc2200'
-    if(explosion.timer > 25) ctx.strokeStyle = '#990000'
-    if(explosion.timer > 28) ctx.strokeStyle = '#550000'
-    ctx.beginPath()
-    ctx.arc(explosion.x, explosion.y, explosion.radius * 6.5, 0, 2 * Math.PI)
-    ctx.stroke()
+  explosions.forEach(explode => {
+    explosion.drawExplosion(explode, ctx, 20)
   })
 
   thrusterFlames.forEach(flame => {
-    ctx.strokeStyle = 'yellow'
-    ctx.lineWidth = 4
-    if(flame.timer > 5) ctx.strokeStyle = '#ffcc00'
-    if(flame.timer > 9) ctx.strokeStyle = '#ffaa00'
-    if(flame.timer > 13) ctx.strokeStyle = '#ff8800'
-    if(flame.timer > 17) ctx.strokeStyle = '#ff5500'
-    if(flame.timer > 21) ctx.strokeStyle = '#cc2200'
-    if(flame.timer > 25) ctx.strokeStyle = '#990000'
-    if(flame.timer > 28) ctx.strokeStyle = '#550000'
-    ctx.beginPath()
-    ctx.arc(flame.x, flame.y, flame.radius * 6.5, 0, 2 * Math.PI)
-    ctx.stroke()
+    explosion.drawExplosion(flame, ctx, 4)
   })
 
   powerups.forEach(power => {
@@ -289,11 +253,11 @@ const draw = () => {
 
   if(!gameOn) return
 
-  asteroids.forEach(asteroid => {
-    drawAsteroid(asteroid, ctx)
+  asteroids.forEach(roid => {
+    asteroid.drawAsteroid(roid, ctx)
   })
-  enemies.forEach(enemy => {
-    drawEnemy(enemy, ctx)
+  enemies.forEach(nemesis => {
+    enemy.draw(nemesis, ctx)
   })
 
   //player
@@ -344,7 +308,7 @@ window.addEventListener('keydown', e => {
     case 32:
       if(player.powerup === 'shotgun') {
         for(let i = 0; i < 5; i++) {
-          const shot = shoot()
+          const shot = playership.shoot()
           shot.timer = 40
           shot.direction += Math.random() * 0.15 - Math.random() * 0.3
           shot.x += Math.random() * 5 - Math.random() * 10
@@ -352,7 +316,7 @@ window.addEventListener('keydown', e => {
           shots.push(shot)
         }
       } else {
-        shots.push(shoot())
+        shots.push(playership.shoot())
       }
       break
     case 8:
@@ -360,7 +324,7 @@ window.addEventListener('keydown', e => {
         gameOn = true
         score = 0
         createAsteroids()
-        initPlayer()
+        playership.initPlayer()
       }
       break
   }
@@ -381,5 +345,5 @@ window.addEventListener('keyup', e => {
 
 setWindowSize()
 createAsteroids()
-initPlayer()
+playership.initPlayer()
 setInterval(update, 1000 / FPS)

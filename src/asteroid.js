@@ -8,7 +8,7 @@ const setCanvasSize = (w, h) => {
 const initAsteroid = (x, y, radius, direction) => {
   const asteroid = {
     radius: radius ? radius : 5,
-    x: x ? x : Math.random() * CANVAS_WIDTH,
+      x: x ? x : Math.random() * CANVAS_WIDTH,
     y: y ? y : Math.random() * CANVAS_HEIGHT,
     direction: direction ? direction : Math.random() * 360,
     speed: -2.5 + Math.random() * 5,
@@ -58,4 +58,4 @@ const moveAsteroid = (asteroid) => {
   if(asteroid.y > CANVAS_HEIGHT + (asteroid.radius * RADIUS_MULTIPLIER)) asteroid.y = -(asteroid.radius * RADIUS_MULTIPLIER)
 }
 
-export { initAsteroid, resetStartingPosition, moveAsteroid, drawAsteroid, RADIUS_MULTIPLIER }
+export default { initAsteroid, resetStartingPosition, moveAsteroid, drawAsteroid, RADIUS_MULTIPLIER }

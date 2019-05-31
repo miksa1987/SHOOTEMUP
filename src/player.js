@@ -33,6 +33,5 @@ const initPlayer = () => {
   player.y = CANVAS_HEIGHT / 2
   player.speed = { x: 0, y: 0 }
 }
-
-export default player
-export { shoot, initPlayer }
+export { player }
+export default { shoot, initPlayer }

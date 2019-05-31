@@ -20,8 +20,23 @@ const moveExplosion = (explosion) => {
   if(explosion.y > CANVAS_HEIGHT + (explosion.radius * RADIUS_MULTIPLIER)) explosion.y = -(explosion.radius * RADIUS_MULTIPLIER)
 }
 
-const drawExplosion = (explosion, ctx) => {
-
+const drawExplosion = (explosion, ctx, lineWidth) => {
+  ctx.strokeStyle = 'yellow'
+  if(!lineWidth) {
+    ctx.lineWidth = 20
+  } else {
+    ctx.lineWidth = lineWidth
+  }
+  if(explosion.timer > 5) ctx.strokeStyle = '#ffcc00'
+  if(explosion.timer > 9) ctx.strokeStyle = '#ffaa00'
+  if(explosion.timer > 13) ctx.strokeStyle = '#ff8800'
+  if(explosion.timer > 17) ctx.strokeStyle = '#ff5500'
+  if(explosion.timer > 21) ctx.strokeStyle = '#cc2200'
+  if(explosion.timer > 25) ctx.strokeStyle = '#990000'
+  if(explosion.timer > 28) ctx.strokeStyle = '#550000'
+  ctx.beginPath()
+  ctx.arc(explosion.x, explosion.y, explosion.radius * 6.5, 0, 2 * Math.PI)
+  ctx.stroke()
 }
 
-export { createExplosion, moveExplosion, drawExplosion }
+export default { createExplosion, moveExplosion, drawExplosion }

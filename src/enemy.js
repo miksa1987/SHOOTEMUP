@@ -1,7 +1,7 @@
 import {CANVAS_WIDTH, CANVAS_HEIGHT, RADIUS_MULTIPLIER, ENEMY_ACCURACY, distance} from './commons'
-import player from './player'
+import { player } from './player'
 
-const initEnemy = () => {
+const init = () => {
   const enemy = {
     x: Math.random() * CANVAS_WIDTH,
     y: Math.random() * CANVAS_HEIGHT,
@@ -27,7 +27,7 @@ const initEnemy = () => {
   return enemy
 }
 
-const drawEnemy = (enemy, ctx) => {
+const draw = (enemy, ctx) => {
   ctx.strokeStyle = 'red'
   ctx.fillStyle = 'red'
   ctx.lineWidth = 1
@@ -44,7 +44,7 @@ const drawEnemy = (enemy, ctx) => {
   ctx.fill()
 }
 
-const enemyShoot = (enemy) => {
+const shoot = (enemy) => {
   const enemyAccuracy = Math.random() * ENEMY_ACCURACY - Math.random() * ENEMY_ACCURACY / 2
   const direction = Math.atan2(enemy.y - player.y, player.x - enemy.x) + enemyAccuracy
   const enemyshot = {
@@ -58,7 +58,7 @@ const enemyShoot = (enemy) => {
   return enemyshot
 }
 
-const moveEnemy = (enemy) => {
+const move = (enemy) => {
   enemy.x += enemy.speed.x
   enemy.y += enemy.speed.y
   if(enemy.x < -(enemy.radius * RADIUS_MULTIPLIER)) enemy.x = CANVAS_WIDTH + (enemy.radius * RADIUS_MULTIPLIER)
@@ -68,6 +68,7 @@ const moveEnemy = (enemy) => {
 }
 
 const trackPlayer = (enemy) => {
+  console.log(`${player.x} ${player.y}`)
   if(distance(player.x, player.y, enemy.x, enemy.y) < 200) {
     if(player.x < enemy.x) enemy.speed.x -= 0.07
     if(player.x > enemy.x) enemy.speed.x += 0.07
@@ -86,4 +87,4 @@ const trackPlayer = (enemy) => {
   if(enemy.speed.y > 3) enemy.speed.y = 3
 }
 
-export { enemyShoot, initEnemy, drawEnemy, trackPlayer, moveEnemy }
+export default { shoot, init, draw, trackPlayer, move }
