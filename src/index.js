@@ -66,7 +66,7 @@ const resetGame = () => {
   // FOR DEBUGGING
   player.powerup = 'shotgun';
 };
-// NOTE TO SELF: refactor this!
+
 const checkCollisions = () => {
   checkPowerupCollisions();
   checkEnemyShotCollisions();
@@ -75,14 +75,13 @@ const checkCollisions = () => {
 };
 
 const checkPowerupCollisions = () =>
-  powerups.forEach((power) => {
-    if (distance(player.x, player.y, power.x, power.y) < 30)
-      powerup.collected = true;
+  powerups.forEach((powerup) => {
+    if (playerIsCollidingToPowerup(powerup)) powerup.collected = true;
   });
 
 const checkEnemyShotCollisions = () =>
   enemyshots.forEach((shot) => {
-    if (distance(player.x, player.y, shot.x, shot.y) < 10) {
+    if (playerIsCollidingToShot(player, shot)) {
       resetGame();
       createHugeExplosion(player.x, player.y, 2);
     }
@@ -90,91 +89,73 @@ const checkEnemyShotCollisions = () =>
 
 const checkEnemyCollisions = () =>
   enemies.forEach((enemy) => {
-    if (enemyIsCollidingToPlayer(enemy, player)) {
-      resetGame();
-      createHugeExplosion(roid.x, roid.y, 1.5);
-      //gameOn = false
-    }
+    checkIsEnemyCollidingToPlayer(enemy, player);
     shots.forEach((shot) => {
-      if (enemyIsCollidingToShot(enemy, shot) && shot.timer > 5) {
-        enemy.hit = true;
-        shot.hit = true;
-        score += 1000;
-
-        createHugeExplosion(enemy.x, enemy.y, 2);
-      }
+      checkIsEnemyCollidingToShot(enemy, shot, true);
     });
     enemyshots.forEach((shot) => {
-      if (enemyIsCollidingToShot(enemy, shot) && shot.timer > 5) {
-        enemy.hit = true;
-        shot.hit = true;
-        createHugeExplosion(enemy.x, enemy.y, 1.5);
-      }
+      checkIsEnemyCollidingToShot(enemy, shot);
     });
   });
 
 const checkAsteroidCollisions = () =>
   asteroids.forEach((roid) => {
-    if (asteroidIsCollidingToPlayer(roid, player)) {
-      resetGame();
-      createHugeExplosion(roid.x, roid.y, 1.5);
-      //gameOn = false
-    }
+    checkIsPlayerCollidingToAsteroid(roid);
 
     shots.forEach((shot) => {
-      if (asteroidIsCollidingToShot(roid, shot)) {
-        if (roid.radius > 2 && !roid.hit) {
-          asteroids.push(
-            asteroid.initAsteroid(
-              roid.x,
-              roid.y,
-              roid.radius - 1,
-              Math.random() * 70
-            )
-          );
-          asteroids.push(
-            asteroid.initAsteroid(
-              roid.x,
-              roid.y,
-              roid.radius - 1,
-              120 + Math.random() * 70
-            )
-          );
-        }
-        roid.hit = true;
-        shot.hit = true;
-
-        score += 50;
-        createHugeExplosion(roid.x, roid.y, 2);
-      }
+      checkIsShotCollidingToAsteroid(shot, roid, true);
     });
     enemyshots.forEach((shot) => {
-      if (asteroidIsCollidingToShot(roid, shot)) {
-        if (roid.radius > 2 && !roid.hit) {
-          asteroids.push(
-            asteroid.initAsteroid(
-              roid.x,
-              roid.y,
-              roid.radius - 1,
-              Math.random() * 70
-            )
-          );
-          asteroids.push(
-            asteroid.initAsteroid(
-              roid.x,
-              roid.y,
-              roid.radius - 1,
-              120 + Math.random() * 70
-            )
-          );
-        }
-        roid.hit = true;
-        shot.hit = true;
-
-        createHugeExplosion(roid.x, roid.y, 2);
-      }
+      checkIsShotCollidingToAsteroid(shot, roid);
     });
   });
+
+const checkIsEnemyCollidingToShot = (enemy, shot, playershot) => {
+  if (enemyIsCollidingToShot(enemy, shot) && shot.timer > 5) {
+    enemy.hit = true;
+    shot.hit = true;
+    if (playershot) score += 1000;
+
+    createHugeExplosion(enemy.x, enemy.y, 2);
+  }
+};
+
+const checkIsEnemyCollidingToPlayer = (enemy, player) => {
+  if (enemyIsCollidingToPlayer(enemy, player)) {
+    resetGame();
+    createHugeExplosion(roid.x, roid.y, 1.5);
+  }
+};
+
+const checkIsPlayerCollidingToAsteroid = (roid) => {
+  if (asteroidIsCollidingToPlayer(roid, player)) {
+    resetGame();
+    createHugeExplosion(roid.x, roid.y, 1.5);
+  }
+};
+
+const checkIsShotCollidingToAsteroid = (shot, roid, playershot) => {
+  if (asteroidIsCollidingToShot(roid, shot)) {
+    destroyAsteroid(roid);
+    shot.hit = true;
+
+    if (playershot) score += 50;
+  }
+};
+
+const playerIsCollidingToPowerup = (player, powerup) => {
+  if (distance(player.x, player.y, powerup.x, powerup.y) < 30) {
+    return true;
+  }
+  return false;
+};
+
+const playerIsCollidingToShot = (player, shot) => {
+  if (distance(player.x, player.y, shot.x, shot.y) < 10) {
+    return true;
+  }
+  return false;
+};
 
 const enemyIsCollidingToShot = (enemy, shot) => {
   if (
@@ -221,6 +202,26 @@ const asteroidIsCollidingToPlayer = (asteroid, player) => {
     return true;
   }
   return false;
+};
+
+const destroyAsteroid = (roid) => {
+  if (roid.radius > 2 && !roid.hit) {
+    const numOfNewAsteroids = Math.round(Math.random() * 4);
+
+    repeatTimes(numOfNewAsteroids, () =>
+      asteroids.push(
+        asteroid.initAsteroid(
+          roid.x,
+          roid.y,
+          roid.radius - 1,
+          Math.random() * 70
+        )
+      )
+    );
+  }
+
+  roid.hit = true;
+  createHugeExplosion(roid.x, roid.y, 2);
 };
 
 const createHugeExplosion = (x, y, maxRadius) => {
