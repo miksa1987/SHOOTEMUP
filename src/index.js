@@ -123,7 +123,7 @@ const checkIsEnemyCollidingToShot = (enemy, shot, playershot) => {
 const checkIsEnemyCollidingToPlayer = (enemy, player) => {
   if (enemyIsCollidingToPlayer(enemy, player)) {
     resetGame();
-    createHugeExplosion(roid.x, roid.y, 1.5);
+    createHugeExplosion(player.x, player.y, 1.5);
   }
 };
 
@@ -256,13 +256,48 @@ const removeHitObjects = () => {
   thrusterFlames = filteredFlames;
 };
 
-// NOTE TO SELF: refactor this!
 const update = () => {
   if (!gameOn) return;
 
   checkCollisions();
   removeHitObjects();
 
+  maybeCreateRandomAsteroid();
+  maybeCreateRandomEnemy();
+
+  if (player.speeding) {
+    increasePlayerSpeed(player);
+    createThrusterFlames(player);
+  }
+
+  movePlayer(player);
+  moveAsteroids(asteroids);
+  setPlayerAngle(player);
+
+  enemies.forEach((nemesis) => {
+    moveEnemy(nemesis);
+    maybeShootAtPlayer(nemesis);
+  });
+
+  shots.forEach((shot) => {
+    moveShot(shot);
+  });
+  enemyshots.forEach((shot) => {
+    moveShot(shot);
+    increaseTimer(shot);
+  });
+
+  thrusterFlames.forEach((flame) => {
+    explosion.moveExplosion(flame);
+    increaseTimer(flame);
+  });
+
+  increaseExplosionTimers(explosions);
+
+  draw();
+};
+
+const maybeCreateRandomAsteroid = () => {
   if (Math.random() < 0.01) {
     const newAsteroid = asteroid.initAsteroid();
     if (distance(newAsteroid.x, newAsteroid.y, player.x, player.y) < 150)
@@ -270,21 +305,20 @@ const update = () => {
 
     asteroids.push(newAsteroid);
   }
+};
 
+const maybeCreateRandomEnemy = () => {
   if (Math.random() < 0.003) {
     enemies.push(enemy.init());
   }
+};
 
-  if (player.speeding) {
-    player.speed.x += (player.SPEED * Math.cos(player.a)) / FPS;
-    player.speed.y -= (player.SPEED * Math.sin(player.a)) / FPS;
-    const random = Math.random() * 8;
+const increasePlayerSpeed = (player) => {
+  player.speed.x += (player.SPEED * Math.cos(player.a)) / FPS;
+  player.speed.y -= (player.SPEED * Math.sin(player.a)) / FPS;
+};
 
-    for (let i = 0; i < random; i++) {
-      thrusterFlames.push(explosion.createExplosion(player.x, player.y, 0.3));
-    }
-  }
-
+const movePlayer = (player) => {
   player.x += player.speed.x;
   player.y += player.speed.y;
 
@@ -292,47 +326,42 @@ const update = () => {
   if (player.y > canvas.height + 20) player.y = -20;
   if (player.x < -20) player.x = canvas.width + 20;
   if (player.y < -20) player.y = canvas.height + 20;
+};
 
-  player.a += player.rotation;
+const moveEnemy = (nemesis) => {
+  enemy.trackPlayer(nemesis);
+  enemy.move(nemesis);
+};
 
-  explosions.forEach((explosion) => explosion.timer++);
+const maybeShootAtPlayer = (nemesis) => {
+  if (Math.random() < 0.05) enemyshots.push(enemy.shoot(nemesis));
+};
+
+const setPlayerAngle = (player) => (player.a += player.rotation);
+
+const increaseExplosionTimers = (explosions) =>
+  explosions.forEach((explosion) => increaseTimer(explosion));
+
+const increaseTimer = (object) => object.timer++;
+
+const moveAsteroids = (asteroids) =>
   asteroids.forEach((roid) => asteroid.moveAsteroid(roid));
 
-  enemies.forEach((nemesis) => {
-    enemy.trackPlayer(nemesis);
-    enemy.move(nemesis);
-    if (Math.random() < 0.05) enemyshots.push(enemy.shoot(nemesis));
+const moveShot = (shot) => {
+  shot.x += (shot.speed * Math.cos(shot.direction)) / FPS;
+  shot.y -= (shot.speed * Math.sin(shot.direction)) / FPS;
+
+  if (shot.x > canvas.width + 5) shot.x = -5;
+  if (shot.y > canvas.height + 5) shot.y = -5;
+  if (shot.x < -5) shot.x = canvas.width + 5;
+  if (shot.y < -5) shot.y = canvas.height + 5;
+};
+
+const createThrusterFlames = (object) => {
+  const random = Math.random() * 8;
+  repeatTimes(random, () => {
+    thrusterFlames.push(explosion.createExplosion(object.x, object.y, 0.3));
   });
-
-  shots.forEach((shot) => {
-    shot.x += (shot.speed * Math.cos(shot.direction)) / FPS;
-    shot.y -= (shot.speed * Math.sin(shot.direction)) / FPS;
-
-    if (shot.x > canvas.width + 5) shot.x = -5;
-    if (shot.y > canvas.height + 5) shot.y = -5;
-    if (shot.x < -5) shot.x = canvas.width + 5;
-    if (shot.y < -5) shot.y = canvas.height + 5;
-
-    shot.timer++;
-  });
-  enemyshots.forEach((shot) => {
-    shot.x += (shot.speed * Math.cos(shot.direction)) / FPS;
-    shot.y -= (shot.speed * Math.sin(shot.direction)) / FPS;
-
-    if (shot.x > canvas.width + 5) shot.x = -5;
-    if (shot.y > canvas.height + 5) shot.y = -5;
-    if (shot.x < -5) shot.x = canvas.width + 5;
-    if (shot.y < -5) shot.y = canvas.height + 5;
-
-    shot.timer++;
-  });
-
-  thrusterFlames.forEach((flame) => {
-    explosion.moveExplosion(flame);
-    flame.timer++;
-  });
-
-  draw();
 };
 
 // NOTE TO SELF: refactor this!
