@@ -366,8 +366,7 @@ const createThrusterFlames = (object) => {
 
 // NOTE TO SELF: refactor this!
 const draw = () => {
-  ctx.fillStyle = 'black';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawBackground(ctx);
 
   explosions.forEach((explode) => {
     explosion.drawExplosion(explode, ctx, 20);
@@ -378,12 +377,7 @@ const draw = () => {
   });
 
   powerups.forEach((power) => {
-    ctx.strokeStyle = '#0000ff';
-    ctx.fillStyle = '#0000ff';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.arc(power.x, power.y, 40, 0, 2 * Math.PI);
-    ctx.stroke();
+    drawPowerup(power);
   });
 
   if (!gameOn) return;
@@ -391,11 +385,38 @@ const draw = () => {
   asteroids.forEach((roid) => {
     asteroid.drawAsteroid(roid, ctx);
   });
+
   enemies.forEach((nemesis) => {
     enemy.draw(nemesis, ctx);
   });
 
-  //player
+  drawPlayer(player);
+
+  shots.forEach((shot) => {
+    drawShot(shot, true);
+  });
+  enemyshots.forEach((shot) => {
+    drawShot(shot);
+  });
+
+  drawScore(score);
+};
+
+const drawBackground = (ctx) => {
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+};
+
+const drawPowerup = (power) => {
+  ctx.strokeStyle = '#0000ff';
+  ctx.fillStyle = '#0000ff';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.arc(power.x, power.y, 40, 0, 2 * Math.PI);
+  ctx.stroke();
+};
+
+const drawPlayer = (player) => {
   ctx.strokeStyle = 'white';
   ctx.fillStyle = 'white';
   ctx.lineWidth = 3;
@@ -418,73 +439,80 @@ const draw = () => {
   ctx.closePath();
   ctx.stroke();
   ctx.fill();
+};
 
-  shots.forEach((shot) => {
-    ctx.fillStyle = 'yellow';
-    ctx.fillRect(shot.x, shot.y, 5, 5);
-  });
-  enemyshots.forEach((shot) => {
-    ctx.fillStyle = 'red';
-    ctx.fillRect(shot.x, shot.y, 5, 5);
-  });
+const drawShot = (shot, playershot) => {
+  ctx.fillStyle = playershot ? 'yellow' : 'red';
+  ctx.fillRect(shot.x, shot.y, 5, 5);
+};
 
+const drawScore = (score) => {
   ctx.fillStyle = 'white';
   ctx.font = '16px Arial';
   ctx.fillText(`SCORE ${score}`, 30, 30);
 };
 
-window.addEventListener('resize', setWindowSize);
+const addResizeListener = () =>
+  window.addEventListener('resize', setWindowSize);
 
-window.addEventListener('keydown', (e) => {
-  switch (e.keyCode) {
-    case 38:
-      player.speeding = true;
-      break;
-    case 37:
-      player.rotation += ((player.TURNSPEED / 180) * Math.PI) / FPS;
-      break;
-    case 39:
-      player.rotation += ((-player.TURNSPEED / 180) * Math.PI) / FPS;
-      break;
-    case 32:
-      if (player.powerup === 'shotgun') {
-        for (let i = 0; i < 5; i++) {
-          const shot = playership.shoot();
-          shot.timer = 40;
-          shot.direction += Math.random() * 0.15 - Math.random() * 0.3;
-          shot.x += Math.random() * 5 - Math.random() * 10;
-          shot.y += Math.random() * 5 - Math.random() * 10;
-          shots.push(shot);
+const addKeyboardListener = () => {
+  window.addEventListener('keydown', (e) => {
+    switch (e.keyCode) {
+      case 38:
+        player.speeding = true;
+        break;
+      case 37:
+        player.rotation += ((player.TURNSPEED / 180) * Math.PI) / FPS;
+        break;
+      case 39:
+        player.rotation += ((-player.TURNSPEED / 180) * Math.PI) / FPS;
+        break;
+      case 32:
+        if (player.powerup === 'shotgun') {
+          for (let i = 0; i < 5; i++) {
+            const shot = playership.shoot();
+            shot.timer = 40;
+            shot.direction += Math.random() * 0.15 - Math.random() * 0.3;
+            shot.x += Math.random() * 5 - Math.random() * 10;
+            shot.y += Math.random() * 5 - Math.random() * 10;
+            shots.push(shot);
+          }
+        } else {
+          shots.push(playership.shoot());
         }
-      } else {
-        shots.push(playership.shoot());
-      }
-      break;
-    case 8:
-      if (!gameOn) {
-        gameOn = true;
-        score = 0;
-        createAsteroids();
-        playership.initPlayer();
-      }
-      break;
-  }
-});
-window.addEventListener('keyup', (e) => {
-  switch (e.keyCode) {
-    case 38:
-      player.speeding = false;
-      break;
-    case 37:
-      player.rotation = 0;
-      break;
-    case 39:
-      player.rotation = 0;
-      break;
-  }
-});
+        break;
+      case 8:
+        if (!gameOn) {
+          gameOn = true;
+          score = 0;
+          createAsteroids();
+          playership.initPlayer();
+        }
+        break;
+    }
+  });
+  window.addEventListener('keyup', (e) => {
+    switch (e.keyCode) {
+      case 38:
+        player.speeding = false;
+        break;
+      case 37:
+        player.rotation = 0;
+        break;
+      case 39:
+        player.rotation = 0;
+        break;
+    }
+  });
+};
 
-setWindowSize();
-createAsteroids();
-playership.initPlayer();
-setInterval(update, 1000 / FPS);
+const main = () => {
+  setWindowSize();
+  addResizeListener();
+  addKeyboardListener();
+  createAsteroids();
+  playership.initPlayer();
+  setInterval(update, 1000 / FPS);
+};
+
+main();
