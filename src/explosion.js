@@ -1,6 +1,6 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT, RADIUS_MULTIPLIER, FPS } from './commons';
 
-const createExplosion = (x, y, radius, speed, direction) => {
+export const createExplosion = (x, y, radius, speed, direction) => {
   return {
     x:
       x -

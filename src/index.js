@@ -1,8 +1,17 @@
-import playership, { player } from './player';
-import enemy from './enemy';
-import asteroid from './asteroid';
-import explosion from './explosion';
-import powerup from './powerup';
+import playership, { player, drawPlayer } from './player';
+import enemy, { drawEnemy } from './enemy';
+import asteroid, { drawAsteroid } from './asteroid';
+import explosion, { createExplosion } from './explosion';
+import powerup, { drawPowerup } from './powerup';
+import {
+  playerIsCollidingToPowerup,
+  playerIsCollidingToShot,
+  enemyIsCollidingToShot,
+  enemyIsCollidingToPlayer,
+  asteroidIsCollidingToAsteroid,
+  asteroidIsCollidingToPlayer,
+  asteroidIsCollidingToShot,
+} from './collisions';
 
 import {
   MAX_ASTEROIDS,
@@ -143,67 +152,6 @@ const checkIsShotCollidingToAsteroid = (shot, roid, playershot) => {
   }
 };
 
-const playerIsCollidingToPowerup = (player, powerup) => {
-  if (distance(player.x, player.y, powerup.x, powerup.y) < 30) {
-    return true;
-  }
-  return false;
-};
-
-const playerIsCollidingToShot = (player, shot) => {
-  if (distance(player.x, player.y, shot.x, shot.y) < 10) {
-    return true;
-  }
-  return false;
-};
-
-const enemyIsCollidingToShot = (enemy, shot) => {
-  if (
-    distance(shot.x, shot.y, enemy.x, enemy.y) <
-    enemy.radius * RADIUS_MULTIPLIER
-  ) {
-    return true;
-  }
-  return false;
-};
-
-const enemyIsCollidingToPlayer = (enemy, player) => {
-  if (
-    distance(player.x, player.y, enemy.x, enemy.y) <
-    enemy.radius * RADIUS_MULTIPLIER
-  ) {
-    return true;
-  }
-  return false;
-};
-
-const asteroidIsCollidingToAsteroid = (asteroid0, asteroid1) => {
-  if (
-    distance(asteroid0.x, asteroid0.y, asteroid1.x, asteroid1.y) <
-    asteroid0.radius * 10
-  ) {
-    return true;
-  }
-  return false;
-};
-
-const asteroidIsCollidingToShot = (asteroid, shot) => {
-  if (distance(shot.x, shot.y, asteroid.x, asteroid.y) < asteroid.radius * 10) {
-    return true;
-  }
-  return false;
-};
-
-const asteroidIsCollidingToPlayer = (asteroid, player) => {
-  if (
-    distance(asteroid.x, asteroid.y, player.x, player.y) <
-    asteroid.radius * 10
-  ) {
-    return true;
-  }
-  return false;
-};
-
 const destroyAsteroid = (roid) => {
   if (roid.radius > 2 && !roid.hit) {
     const numOfNewAsteroids = Math.round(Math.random() * 4);
@@ -228,7 +176,7 @@ const createHugeExplosion = (x, y, maxRadius) => {
   const numberOfSmallerExplosions = Math.round(Math.random() * 50);
   repeatTimes(numberOfSmallerExplosions, () => {
     const explosionSize = Math.random() * maxRadius;
-    explosions.push(explosion.createExplosion(x, y, explosionSize));
+    explosions.push(createExplosion(x, y, explosionSize));
   });
 };
 
@@ -383,14 +331,14 @@ const draw = () => {
   if (!gameOn) return;
 
   asteroids.forEach((roid) => {
-    asteroid.drawAsteroid(roid, ctx);
+    drawAsteroid(roid, ctx);
   });
 
   enemies.forEach((nemesis) => {
-    enemy.draw(nemesis, ctx);
+    drawEnemy(nemesis, ctx);
   });
 
-  drawPlayer(player);
+  drawPlayer(player, ctx);
 
   shots.forEach((shot) => {
     drawShot(shot, true);
@@ -405,40 +353,6 @@ const draw = () => {
 const drawBackground = (ctx) => {
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-};
-
-const drawPowerup = (power) => {
-  ctx.strokeStyle = '#0000ff';
-  ctx.fillStyle = '#0000ff';
-  ctx.lineWidth = 6;
-  ctx.beginPath();
-  ctx.arc(power.x, power.y, 40, 0, 2 * Math.PI);
-  ctx.stroke();
-};
-
-const drawPlayer = (player) => {
-  ctx.strokeStyle = 'white';
-  ctx.fillStyle = 'white';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(
-    // nose of the player
-    player.x + (7 / 3) * player.r * Math.cos(player.a),
-    player.y - (7 / 3) * player.r * Math.sin(player.a)
-  );
-  ctx.lineTo(
-    // rear left
-    player.x - player.r * ((2 / 3) * Math.cos(player.a) + Math.sin(player.a)),
-    player.y + player.r * ((2 / 3) * Math.sin(player.a) - Math.cos(player.a))
-  );
-  ctx.lineTo(
-    // rear right
-    player.x - player.r * ((2 / 3) * Math.cos(player.a) - Math.sin(player.a)),
-    player.y + player.r * ((2 / 3) * Math.sin(player.a) + Math.cos(player.a))
-  );
-  ctx.closePath();
-  ctx.stroke();
-  ctx.fill();
 };
 
 const drawShot = (shot, playershot) => {

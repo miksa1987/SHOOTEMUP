@@ -53,7 +53,7 @@ const addCraters = (asteroid) => {
   }
 };
 
-const drawAsteroid = (asteroid, ctx) => {
+export const drawAsteroid = (asteroid, ctx) => {
   ctx.strokeStyle = 'grey';
   ctx.fillStyle = 'grey';
   ctx.lineWidth = 1;
