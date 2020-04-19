@@ -7,7 +7,7 @@ import {
 } from './commons';
 import { player } from './player';
 
-const init = () => {
+export const initEnemy = () => {
   const enemy = {
     x: Math.random() * CANVAS_WIDTH,
     y: Math.random() * CANVAS_HEIGHT,
@@ -56,7 +56,7 @@ export const drawEnemy = (enemy, ctx) => {
   ctx.fill();
 };
 
-const shoot = (enemy) => {
+export const shoot = (enemy) => {
   const enemyAccuracy =
     Math.random() * ENEMY_ACCURACY - (Math.random() * ENEMY_ACCURACY) / 2;
   const direction =
@@ -86,7 +86,6 @@ const move = (enemy) => {
 };
 
 const trackPlayer = (enemy) => {
-  console.log(`${player.x} ${player.y}`);
   if (distance(player.x, player.y, enemy.x, enemy.y) < 200) {
     if (player.x < enemy.x) enemy.speed.x -= 0.07;
     if (player.x > enemy.x) enemy.speed.x += 0.07;
@@ -105,4 +104,4 @@ const trackPlayer = (enemy) => {
   if (enemy.speed.y > 3) enemy.speed.y = 3;
 };
 
-export default { shoot, init, trackPlayer, move };
+export default { shoot, trackPlayer, move };

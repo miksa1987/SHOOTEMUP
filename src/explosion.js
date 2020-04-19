@@ -1,4 +1,10 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, RADIUS_MULTIPLIER, FPS } from './commons';
+import {
+  CANVAS_WIDTH,
+  CANVAS_HEIGHT,
+  RADIUS_MULTIPLIER,
+  FPS,
+  repeatTimes,
+} from './commons';
 
 export const createExplosion = (x, y, radius, speed, direction) => {
   return {
@@ -15,6 +21,17 @@ export const createExplosion = (x, y, radius, speed, direction) => {
     speed: speed ? speed : 0,
     direction: direction ? direction : 0,
   };
+};
+
+export const createHugeExplosion = (x, y, maxRadius = 2.5) => {
+  const explosions = [];
+  const numberOfSmallerExplosions = Math.round(Math.random() * 50);
+  repeatTimes(numberOfSmallerExplosions, () => {
+    const explosionSize = Math.random() * maxRadius;
+    explosions.push(createExplosion(x, y, explosionSize));
+  });
+
+  return explosions;
 };
 
 const moveExplosion = (explosion) => {

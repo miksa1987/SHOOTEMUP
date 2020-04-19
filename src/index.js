@@ -1,5 +1,5 @@
 import playership, { player, drawPlayer } from './player';
-import enemy, { drawEnemy } from './enemy';
+import enemy, { initEnemy, drawEnemy } from './enemy';
 import asteroid, { drawAsteroid } from './asteroid';
 import explosion, { createExplosion } from './explosion';
 import powerup, { drawPowerup } from './powerup';
@@ -8,25 +8,23 @@ import {
   playerIsCollidingToShot,
   enemyIsCollidingToShot,
   enemyIsCollidingToPlayer,
-  asteroidIsCollidingToAsteroid,
   asteroidIsCollidingToPlayer,
   asteroidIsCollidingToShot,
 } from './collisions';
 
-import {
-  MAX_ASTEROIDS,
-  RADIUS_MULTIPLIER,
-  setCanvasSize,
-  repeatTimes,
-  distance,
-} from './commons';
+import { MAX_ASTEROIDS, setCanvasSize, repeatTimes, distance } from './commons';
+
+import { createGameState } from './gamestate';
+
+const gameState = createGameState();
+console.log(gameState);
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
 let gameOn = true;
 
-const FPS = 40;
+const FPS = 50;
 
 let score = 0;
 
@@ -46,10 +44,8 @@ const setWindowSize = () => {
 
 const createAsteroids = () => {
   const asteroidsNumber = 2 + Math.random() * MAX_ASTEROIDS - 2;
-
-  repeatTimes(asteroidsNumber, () => asteroids.push(asteroid.initAsteroid()));
-
-  checkValidAsteroidStartingPositions(asteroids);
+  repeatTimes(asteroidsNumber, () => gameState.addAsteroid());
+  checkValidAsteroidStartingPositions(gameState.getAsteroids());
 };
 
 const checkValidAsteroidStartingPositions = (asteroids) =>
@@ -84,12 +80,12 @@ const checkCollisions = () => {
 };
 
 const checkPowerupCollisions = () =>
-  powerups.forEach((powerup) => {
+  gameState.getPowerUps().forEach((powerup) => {
     if (playerIsCollidingToPowerup(powerup)) powerup.collected = true;
   });
 
 const checkEnemyShotCollisions = () =>
-  enemyshots.forEach((shot) => {
+  gameState.getEnemyShots().forEach((shot) => {
     if (playerIsCollidingToShot(player, shot)) {
       resetGame();
       createHugeExplosion(player.x, player.y, 2);
@@ -97,7 +93,7 @@ const checkEnemyShotCollisions = () =>
   });
 
 const checkEnemyCollisions = () =>
-  enemies.forEach((enemy) => {
+  gameState.getEnemies().forEach((enemy) => {
     checkIsEnemyCollidingToPlayer(enemy, player);
     shots.forEach((shot) => {
       checkIsEnemyCollidingToShot(enemy, shot, true);
@@ -108,13 +104,13 @@ const checkEnemyCollisions = () =>
   });
 
 const checkAsteroidCollisions = () =>
-  asteroids.forEach((roid) => {
+  gameState.getAsteroids().forEach((roid) => {
     checkIsPlayerCollidingToAsteroid(roid);
 
-    shots.forEach((shot) => {
+    gameState.getPlayerShots().forEach((shot) => {
       checkIsShotCollidingToAsteroid(shot, roid, true);
     });
-    enemyshots.forEach((shot) => {
+    gameState.getEnemyShots().forEach((shot) => {
       checkIsShotCollidingToAsteroid(shot, roid);
     });
   });
@@ -125,21 +121,21 @@ const checkIsEnemyCollidingToShot = (enemy, shot, playershot) => {
     shot.hit = true;
     if (playershot) score += 1000;
 
-    createHugeExplosion(enemy.x, enemy.y, 2);
+    gameState.addExplosion(enemy.x, enemy.y);
   }
 };
 
 const checkIsEnemyCollidingToPlayer = (enemy, player) => {
   if (enemyIsCollidingToPlayer(enemy, player)) {
-    resetGame();
-    createHugeExplosion(player.x, player.y, 1.5);
+    gameState.reset();
+    gameState.addExplosion(player.x, player.y, 1.5);
   }
 };
 
 const checkIsPlayerCollidingToAsteroid = (roid) => {
   if (asteroidIsCollidingToPlayer(roid, player)) {
-    resetGame();
-    createHugeExplosion(roid.x, roid.y, 1.5);
+    gameState.reset();
+    gameState.addExplosion(roid.x, roid.y, 1.5);
   }
 };
 
@@ -157,19 +153,12 @@ const destroyAsteroid = (roid) => {
     const numOfNewAsteroids = Math.round(Math.random() * 4);
 
     repeatTimes(numOfNewAsteroids, () =>
-      asteroids.push(
-        asteroid.initAsteroid(
-          roid.x,
-          roid.y,
-          roid.radius - 1,
-          Math.random() * 70
-        )
-      )
+      gameState.addAsteroid(roid.x, roid.y, roid.radius - 1, Math.random() * 70)
     );
   }
 
   roid.hit = true;
-  createHugeExplosion(roid.x, roid.y, 2);
+  gameState.addExplosion(roid.x, roid.y);
 };
 
 const createHugeExplosion = (x, y, maxRadius) => {
@@ -180,35 +169,11 @@ const createHugeExplosion = (x, y, maxRadius) => {
   });
 };
 
-const removeHitObjects = () => {
-  const filteredasteroids = asteroids.filter((asteroid) => !asteroid.hit);
-  const filteredshots = shots
-    .filter((shot) => !shot.hit)
-    .filter((shot) => shot.timer < 70);
-  const filteredexplosions = explosions.filter(
-    (explosion) => explosion.timer < 30
-  );
-  const filteredFlames = thrusterFlames.filter((flame) => flame.timer < 30);
-  const filteredEnemies = enemies.filter((enemy) => !enemy.hit);
-  const filteredEnemyShots = enemyshots
-    .filter((shot) => !shot.hit)
-    .filter((shot) => shot.timer < 50);
-  const filteredPowers = powerups.filter((power) => power.collected);
-
-  powerups = filteredPowers;
-  asteroids = filteredasteroids;
-  shots = filteredshots;
-  enemies = filteredEnemies;
-  enemyshots = filteredEnemyShots;
-  explosions = filteredexplosions;
-  thrusterFlames = filteredFlames;
-};
-
 const update = () => {
   if (!gameOn) return;
 
   checkCollisions();
-  removeHitObjects();
+  gameState.removeHitObjects();
 
   maybeCreateRandomAsteroid();
   maybeCreateRandomEnemy();
@@ -219,45 +184,42 @@ const update = () => {
   }
 
   movePlayer(player);
-  moveAsteroids(asteroids);
+  moveAsteroids(gameState.getAsteroids());
   setPlayerAngle(player);
 
-  enemies.forEach((nemesis) => {
+  gameState.getEnemies().forEach((nemesis) => {
     moveEnemy(nemesis);
     maybeShootAtPlayer(nemesis);
   });
 
-  shots.forEach((shot) => {
+  gameState.getPlayerShots().forEach((shot) => {
     moveShot(shot);
+    increaseTimer(shot);
   });
-  enemyshots.forEach((shot) => {
+  gameState.getEnemyShots().forEach((shot) => {
     moveShot(shot);
     increaseTimer(shot);
   });
 
-  thrusterFlames.forEach((flame) => {
+  gameState.getThrusterFlames().forEach((flame) => {
     explosion.moveExplosion(flame);
     increaseTimer(flame);
   });
 
-  increaseExplosionTimers(explosions);
+  increaseExplosionTimers(gameState.getExplosions());
 
   draw();
 };
 
 const maybeCreateRandomAsteroid = () => {
   if (Math.random() < 0.01) {
-    const newAsteroid = asteroid.initAsteroid();
-    if (distance(newAsteroid.x, newAsteroid.y, player.x, player.y) < 150)
-      asteroid.resetStartingPosition(newAsteroid);
-
-    asteroids.push(newAsteroid);
+    gameState.addAsteroid();
   }
 };
 
 const maybeCreateRandomEnemy = () => {
   if (Math.random() < 0.003) {
-    enemies.push(enemy.init());
+    gameState.addEnemy();
   }
 };
 
@@ -312,38 +274,37 @@ const createThrusterFlames = (object) => {
   });
 };
 
-// NOTE TO SELF: refactor this!
 const draw = () => {
   drawBackground(ctx);
 
-  explosions.forEach((explode) => {
+  gameState.getExplosions().forEach((explode) => {
     explosion.drawExplosion(explode, ctx, 20);
   });
 
-  thrusterFlames.forEach((flame) => {
+  gameState.getThrusterFlames().forEach((flame) => {
     explosion.drawExplosion(flame, ctx, 4);
   });
 
-  powerups.forEach((power) => {
+  gameState.getPowerUps().forEach((power) => {
     drawPowerup(power);
   });
 
   if (!gameOn) return;
 
-  asteroids.forEach((roid) => {
+  gameState.getAsteroids().forEach((roid) => {
     drawAsteroid(roid, ctx);
   });
 
-  enemies.forEach((nemesis) => {
+  gameState.getEnemies().forEach((nemesis) => {
     drawEnemy(nemesis, ctx);
   });
 
   drawPlayer(player, ctx);
 
-  shots.forEach((shot) => {
+  gameState.getPlayerShots().forEach((shot) => {
     drawShot(shot, true);
   });
-  enemyshots.forEach((shot) => {
+  gameState.getEnemyShots().forEach((shot) => {
     drawShot(shot);
   });
 
@@ -382,18 +343,7 @@ const addKeyboardListener = () => {
         player.rotation += ((-player.TURNSPEED / 180) * Math.PI) / FPS;
         break;
       case 32:
-        if (player.powerup === 'shotgun') {
-          for (let i = 0; i < 5; i++) {
-            const shot = playership.shoot();
-            shot.timer = 40;
-            shot.direction += Math.random() * 0.15 - Math.random() * 0.3;
-            shot.x += Math.random() * 5 - Math.random() * 10;
-            shot.y += Math.random() * 5 - Math.random() * 10;
-            shots.push(shot);
-          }
-        } else {
-          shots.push(playership.shoot());
-        }
+        gameState.addPlayerShot();
         break;
       case 8:
         if (!gameOn) {
@@ -426,7 +376,7 @@ const main = () => {
   addKeyboardListener();
   createAsteroids();
   playership.initPlayer();
-  setInterval(update, 1000 / FPS);
+  setInterval(update, 1000 / gameState.getFPS());
 };
 
 main();

@@ -5,12 +5,7 @@ import {
   distance,
 } from './commons';
 
-const setCanvasSize = (w, h) => {
-  CANVAS_WIDTH = w;
-  CANVAS_HEIGHT = h;
-};
-
-const initAsteroid = (x, y, radius, direction) => {
+export const initAsteroid = (x, y, radius, direction) => {
   const asteroid = {
     radius: radius ? radius : 5,
     x: x ? x : Math.random() * CANVAS_WIDTH,

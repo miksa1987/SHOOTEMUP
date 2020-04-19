@@ -9,12 +9,12 @@ const player = {
   speeding: false,
   speed: { x: 0, y: 0 },
   powerup: null,
-  FRICTION: 0.1,
-  TURNSPEED: 150,
-  SPEED: 5,
+  FRICTION: 0.3,
+  TURNSPEED: 120,
+  SPEED: 3,
 };
 
-const shoot = () => {
+export const shoot = () => {
   const shot = {
     direction: player.a,
     x: player.x,
