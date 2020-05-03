@@ -1,4 +1,3 @@
-import playership, { player, drawPlayer } from "./player";
 import enemy, { initEnemy, drawEnemy } from "./enemy";
 import asteroid, { drawAsteroid } from "./asteroid";
 import explosion, { createExplosion } from "./explosion";
@@ -21,8 +20,8 @@ const gameState = createGameState();
 console.log(gameState);
 
 const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
 
+const player = gameState.getPlayer();
 let gameOn = true;
 
 const FPS = 50;
@@ -39,11 +38,13 @@ const createAsteroids = () => {
   checkValidAsteroidStartingPositions(gameState.getAsteroids());
 };
 
-const checkValidAsteroidStartingPositions = (asteroids) =>
+const checkValidAsteroidStartingPositions = (asteroids) => {
+  const playerPosition = player.getPosition();
   asteroids.forEach((roid) => {
-    if (distance(roid.x, roid.y, player.x, player.y) < 200)
+    if (distance(roid.x, roid.y, playerPosition.x, playerPosition.y) < 200)
       asteroid.resetStartingPosition(roid);
   });
+};
 
 const checkCollisions = () => {
   checkPowerupCollisions();
@@ -60,8 +61,9 @@ const checkPowerupCollisions = () =>
 const checkEnemyShotCollisions = () =>
   gameState.getEnemyShots().forEach((shot) => {
     if (playerIsCollidingToShot(player, shot)) {
+      const playerPosition = player.getPosition();
       gameState.reset();
-      gameState.addExplosion(player.x, player.y);
+      gameState.addExplosion(playerPosition.x, playerPosition.y);
     }
   });
 
@@ -152,12 +154,14 @@ const update = () => {
   maybeCreateRandomAsteroid();
   maybeCreateRandomEnemy();
 
-  if (player.speeding) {
-    increasePlayerSpeed(player);
+  if (player.isSpeeding()) {
+    player.accelerate();
+
     createThrusterFlames(player);
   }
 
-  movePlayer(player);
+  player.move();
+  player.setAngle();
   moveAsteroids(gameState.getAsteroids());
   setPlayerAngle(player);
 
@@ -197,23 +201,8 @@ const maybeCreateRandomEnemy = () => {
   }
 };
 
-const increasePlayerSpeed = (player) => {
-  player.speed.x += (player.SPEED * Math.cos(player.a)) / FPS;
-  player.speed.y -= (player.SPEED * Math.sin(player.a)) / FPS;
-};
-
-const movePlayer = (player) => {
-  player.x += player.speed.x;
-  player.y += player.speed.y;
-
-  if (player.x > canvas.width + 20) player.x = -20;
-  if (player.y > canvas.height + 20) player.y = -20;
-  if (player.x < -20) player.x = canvas.width + 20;
-  if (player.y < -20) player.y = canvas.height + 20;
-};
-
 const moveEnemy = (nemesis) => {
-  enemy.trackPlayer(nemesis);
+  enemy.trackPlayer(nemesis, gameState);
   enemy.move(nemesis);
 };
 
@@ -255,13 +244,13 @@ const addKeyboardListener = () => {
   window.addEventListener("keydown", (e) => {
     switch (e.keyCode) {
       case 38:
-        player.speeding = true;
+        player.setSpeeding(true);
         break;
       case 37:
-        player.rotation += ((player.TURNSPEED / 180) * Math.PI) / FPS;
+        player.turnLeft();
         break;
       case 39:
-        player.rotation += ((-player.TURNSPEED / 180) * Math.PI) / FPS;
+        player.turnRight();
         break;
       case 32:
         gameState.addPlayerShot();
@@ -271,7 +260,7 @@ const addKeyboardListener = () => {
           gameOn = true;
           score = 0;
           createAsteroids();
-          playership.initPlayer();
+          player.init();
         }
         break;
     }
@@ -279,13 +268,13 @@ const addKeyboardListener = () => {
   window.addEventListener("keyup", (e) => {
     switch (e.keyCode) {
       case 38:
-        player.speeding = false;
+        player.setSpeeding(false);
         break;
       case 37:
-        player.rotation = 0;
+        player.stopTurning();
         break;
       case 39:
-        player.rotation = 0;
+        player.stopTurning();
         break;
     }
   });
@@ -296,7 +285,7 @@ const main = () => {
   addResizeListener();
   addKeyboardListener();
   createAsteroids();
-  playership.initPlayer();
+  player.init();
   setInterval(update, 1000 / gameState.getFPS());
 };
 

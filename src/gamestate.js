@@ -1,6 +1,6 @@
-import { player, shoot as playerShoot } from "./player";
+import { createPlayer } from "./player";
 import { initEnemy, shoot as enemyShoot } from "./enemy";
-import { createThrusterFlame, createHugeExplosion } from "./explosion";
+import { createHugeExplosion } from "./explosion";
 import { initAsteroid } from "./asteroid";
 
 const initialState = {
@@ -12,7 +12,7 @@ const initialState = {
   thrusterFlames: [],
   powerUps: [], // TBD later
 
-  player,
+  player: createPlayer(),
   score: 0,
   FPS: 50,
 };
@@ -35,7 +35,11 @@ export const createGameState = () => {
     addScore: (amount) => (state.score = state.score + amount),
 
     addEnemy: () => {
-      state.enemies = [...state.enemies, initEnemy()];
+      // Most definitely not clean, todo better solution
+      state.enemies = [
+        ...state.enemies,
+        initEnemy({ getPlayer: () => state.player }),
+      ];
     },
     addAsteroid: (x, y, radius, direction) => {
       state.asteroids = [
@@ -44,10 +48,14 @@ export const createGameState = () => {
       ];
     },
     addPlayerShot: () => {
-      state.playerShots = [...state.playerShots, playerShoot()];
+      state.playerShots = [...state.playerShots, state.player.shoot()];
     },
     addEnemyShot: (enemy) => {
-      state.enemyShots = [...state.enemyShots, enemyShoot(enemy)];
+      // Most definitely not clean, todo better solution
+      state.enemyShots = [
+        ...state.enemyShots,
+        enemyShoot(enemy, { getPlayer: () => state.player }),
+      ];
     },
     addExplosion: (x, y) => {
       state.explosions = state.explosions.concat(createHugeExplosion(x, y));

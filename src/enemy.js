@@ -5,9 +5,9 @@ import {
   ENEMY_ACCURACY,
   distance,
 } from "./commons";
-import { player } from "./player";
 
-export const initEnemy = () => {
+export const initEnemy = (gameState) => {
+  const player = gameState.getPlayer();
   const enemy = {
     x: Math.random() * CANVAS_WIDTH,
     y: Math.random() * CANVAS_HEIGHT,
@@ -33,7 +33,8 @@ export const initEnemy = () => {
   return enemy;
 };
 
-export const shoot = (enemy) => {
+export const shoot = (enemy, gameState) => {
+  const player = gameState.getPlayer();
   const enemyAccuracy =
     Math.random() * ENEMY_ACCURACY - (Math.random() * ENEMY_ACCURACY) / 2;
   const direction =
@@ -62,7 +63,8 @@ const move = (enemy) => {
     enemy.y = -(enemy.radius * RADIUS_MULTIPLIER);
 };
 
-const trackPlayer = (enemy) => {
+const trackPlayer = (enemy, gameState) => {
+  const player = gameState.getPlayer();
   if (distance(player.x, player.y, enemy.x, enemy.y) < 200) {
     if (player.x < enemy.x) enemy.speed.x -= 0.07;
     if (player.x > enemy.x) enemy.speed.x += 0.07;
