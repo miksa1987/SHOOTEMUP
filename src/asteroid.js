@@ -3,7 +3,7 @@ import {
   CANVAS_HEIGHT,
   RADIUS_MULTIPLIER,
   distance,
-} from './commons';
+} from "./commons";
 
 export const initAsteroid = (x, y, radius, direction) => {
   const asteroid = {
@@ -17,45 +17,6 @@ export const initAsteroid = (x, y, radius, direction) => {
   };
 
   return asteroid;
-};
-
-// BAD IDEA
-const addCraters = (asteroid) => {
-  asteroid.craters = [];
-  const number = Math.random() * 6;
-  for (let i = 0; i < number; i++) {
-    asteroid.craters.push({
-      x:
-        (asteroid.radius * RADIUS_MULTIPLIER) / 2 +
-        Math.random() *
-          distance(
-            asteroid.x,
-            asteroid.y,
-            asteroid.radius * RADIUS_MULTIPLIER,
-            asteroid.y
-          ),
-      y:
-        (asteroid.radius * RADIUS_MULTIPLIER) / 2 +
-        Math.random() *
-          distance(
-            asteroid.x,
-            asteroid.y,
-            asteroid.x,
-            asteroid.radius * RADIUS_MULTIPLIER
-          ),
-      radius: 0.6,
-    });
-  }
-};
-
-export const drawAsteroid = (asteroid, ctx) => {
-  ctx.strokeStyle = 'grey';
-  ctx.fillStyle = 'grey';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(asteroid.x, asteroid.y, asteroid.radius * 7, 0, 2 * Math.PI);
-  ctx.stroke();
-  ctx.fill();
 };
 
 const resetStartingPosition = (asteroid) => {
@@ -81,6 +42,4 @@ export default {
   initAsteroid,
   resetStartingPosition,
   moveAsteroid,
-  drawAsteroid,
-  RADIUS_MULTIPLIER,
 };

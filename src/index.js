@@ -1,8 +1,9 @@
-import playership, { player, drawPlayer } from './player';
-import enemy, { initEnemy, drawEnemy } from './enemy';
-import asteroid, { drawAsteroid } from './asteroid';
-import explosion, { createExplosion } from './explosion';
-import powerup, { drawPowerup } from './powerup';
+import playership, { player, drawPlayer } from "./player";
+import enemy, { initEnemy, drawEnemy } from "./enemy";
+import asteroid, { drawAsteroid } from "./asteroid";
+import explosion, { createExplosion } from "./explosion";
+import powerup, { drawPowerup } from "./powerup";
+import { draw } from "./draw";
 import {
   playerIsCollidingToPowerup,
   playerIsCollidingToShot,
@@ -10,31 +11,21 @@ import {
   enemyIsCollidingToPlayer,
   asteroidIsCollidingToPlayer,
   asteroidIsCollidingToShot,
-} from './collisions';
+} from "./collisions";
 
-import { MAX_ASTEROIDS, setCanvasSize, repeatTimes, distance } from './commons';
+import { MAX_ASTEROIDS, setCanvasSize, repeatTimes, distance } from "./commons";
 
-import { createGameState } from './gamestate';
+import { createGameState } from "./gamestate";
 
 const gameState = createGameState();
 console.log(gameState);
 
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
 let gameOn = true;
 
 const FPS = 50;
-
-let score = 0;
-
-let asteroids = [];
-let enemies = [];
-let shots = [];
-let enemyshots = [];
-let explosions = [];
-let thrusterFlames = [];
-let powerups = [];
 
 const setWindowSize = () => {
   canvas.width = window.innerWidth - 20;
@@ -54,24 +45,6 @@ const checkValidAsteroidStartingPositions = (asteroids) =>
       asteroid.resetStartingPosition(roid);
   });
 
-const resetGame = () => {
-  ctx.fontStyle = 'Arial 30px';
-  ctx.fillText('GAME OVER', canvas.width / 2 - 60, canvas.height / 2);
-  setTimeout(() => {}, 3000);
-  asteroids = [];
-  shots = [];
-  enemies = [];
-  enemyshots = [];
-  powerups = [];
-  player.speed = { x: 0, y: 0 };
-  score = 0;
-  createAsteroids();
-  playership.initPlayer();
-
-  // FOR DEBUGGING
-  player.powerup = 'shotgun';
-};
-
 const checkCollisions = () => {
   checkPowerupCollisions();
   checkEnemyShotCollisions();
@@ -87,18 +60,18 @@ const checkPowerupCollisions = () =>
 const checkEnemyShotCollisions = () =>
   gameState.getEnemyShots().forEach((shot) => {
     if (playerIsCollidingToShot(player, shot)) {
-      resetGame();
-      createHugeExplosion(player.x, player.y, 2);
+      gameState.reset();
+      gameState.addExplosion(player.x, player.y);
     }
   });
 
 const checkEnemyCollisions = () =>
   gameState.getEnemies().forEach((enemy) => {
     checkIsEnemyCollidingToPlayer(enemy, player);
-    shots.forEach((shot) => {
+    gameState.getPlayerShots().forEach((shot) => {
       checkIsEnemyCollidingToShot(enemy, shot, true);
     });
-    enemyshots.forEach((shot) => {
+    gameState.getEnemyShots().forEach((shot) => {
       checkIsEnemyCollidingToShot(enemy, shot);
     });
   });
@@ -116,10 +89,10 @@ const checkAsteroidCollisions = () =>
   });
 
 const checkIsEnemyCollidingToShot = (enemy, shot, playershot) => {
-  if (enemyIsCollidingToShot(enemy, shot) && shot.timer > 5) {
+  if (enemyIsCollidingToShot(enemy, shot) && shot.timer > 10) {
     enemy.hit = true;
     shot.hit = true;
-    if (playershot) score += 1000;
+    if (playershot) gameState.addScore(1000);
 
     gameState.addExplosion(enemy.x, enemy.y);
   }
@@ -144,7 +117,7 @@ const checkIsShotCollidingToAsteroid = (shot, roid, playershot) => {
     destroyAsteroid(roid);
     shot.hit = true;
 
-    if (playershot) score += 50;
+    if (playershot) gameState.addScore(100);
   }
 };
 
@@ -173,6 +146,7 @@ const update = () => {
   if (!gameOn) return;
 
   checkCollisions();
+
   gameState.removeHitObjects();
 
   maybeCreateRandomAsteroid();
@@ -208,7 +182,7 @@ const update = () => {
 
   increaseExplosionTimers(gameState.getExplosions());
 
-  draw();
+  draw(gameState);
 };
 
 const maybeCreateRandomAsteroid = () => {
@@ -244,7 +218,7 @@ const moveEnemy = (nemesis) => {
 };
 
 const maybeShootAtPlayer = (nemesis) => {
-  if (Math.random() < 0.05) enemyshots.push(enemy.shoot(nemesis));
+  if (Math.random() < 0.05) gameState.addEnemyShot(nemesis);
 };
 
 const setPlayerAngle = (player) => (player.a += player.rotation);
@@ -270,68 +244,15 @@ const moveShot = (shot) => {
 const createThrusterFlames = (object) => {
   const random = Math.random() * 8;
   repeatTimes(random, () => {
-    thrusterFlames.push(explosion.createExplosion(object.x, object.y, 0.3));
+    gameState.addThrusterFlame(object.x, object.y);
   });
-};
-
-const draw = () => {
-  drawBackground(ctx);
-
-  gameState.getExplosions().forEach((explode) => {
-    explosion.drawExplosion(explode, ctx, 20);
-  });
-
-  gameState.getThrusterFlames().forEach((flame) => {
-    explosion.drawExplosion(flame, ctx, 4);
-  });
-
-  gameState.getPowerUps().forEach((power) => {
-    drawPowerup(power);
-  });
-
-  if (!gameOn) return;
-
-  gameState.getAsteroids().forEach((roid) => {
-    drawAsteroid(roid, ctx);
-  });
-
-  gameState.getEnemies().forEach((nemesis) => {
-    drawEnemy(nemesis, ctx);
-  });
-
-  drawPlayer(player, ctx);
-
-  gameState.getPlayerShots().forEach((shot) => {
-    drawShot(shot, true);
-  });
-  gameState.getEnemyShots().forEach((shot) => {
-    drawShot(shot);
-  });
-
-  drawScore(score);
-};
-
-const drawBackground = (ctx) => {
-  ctx.fillStyle = 'black';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-};
-
-const drawShot = (shot, playershot) => {
-  ctx.fillStyle = playershot ? 'yellow' : 'red';
-  ctx.fillRect(shot.x, shot.y, 5, 5);
-};
-
-const drawScore = (score) => {
-  ctx.fillStyle = 'white';
-  ctx.font = '16px Arial';
-  ctx.fillText(`SCORE ${score}`, 30, 30);
 };
 
 const addResizeListener = () =>
-  window.addEventListener('resize', setWindowSize);
+  window.addEventListener("resize", setWindowSize);
 
 const addKeyboardListener = () => {
-  window.addEventListener('keydown', (e) => {
+  window.addEventListener("keydown", (e) => {
     switch (e.keyCode) {
       case 38:
         player.speeding = true;
@@ -355,7 +276,7 @@ const addKeyboardListener = () => {
         break;
     }
   });
-  window.addEventListener('keyup', (e) => {
+  window.addEventListener("keyup", (e) => {
     switch (e.keyCode) {
       case 38:
         player.speeding = false;

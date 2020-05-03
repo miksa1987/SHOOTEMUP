@@ -4,7 +4,7 @@ import {
   RADIUS_MULTIPLIER,
   FPS,
   repeatTimes,
-} from './commons';
+} from "./commons";
 
 export const createExplosion = (x, y, radius, speed, direction) => {
   return {
@@ -23,9 +23,9 @@ export const createExplosion = (x, y, radius, speed, direction) => {
   };
 };
 
-export const createHugeExplosion = (x, y, maxRadius = 2.5) => {
+export const createHugeExplosion = (x, y, maxRadius = 2.5, maxNumber = 50) => {
   const explosions = [];
-  const numberOfSmallerExplosions = Math.round(Math.random() * 50);
+  const numberOfSmallerExplosions = Math.round(Math.random() * maxNumber);
   repeatTimes(numberOfSmallerExplosions, () => {
     const explosionSize = Math.random() * maxRadius;
     explosions.push(createExplosion(x, y, explosionSize));
@@ -48,25 +48,4 @@ const moveExplosion = (explosion) => {
     explosion.y = -(explosion.radius * RADIUS_MULTIPLIER);
 };
 
-const drawExplosion = (explosion, ctx, lineWidth) => {
-  ctx.strokeStyle = 'yellow';
-  if (!lineWidth) {
-    ctx.lineWidth = 50;
-  } else {
-    ctx.lineWidth = lineWidth;
-  }
-  if (explosion.timer > 5) ctx.strokeStyle = '#ffff00';
-  if (explosion.timer > 9) ctx.strokeStyle = '#ffcc00';
-  if (explosion.timer > 12) ctx.strokeStyle = '#ff8800';
-  if (explosion.timer > 15) ctx.strokeStyle = '#ff5500';
-  if (explosion.timer > 18) ctx.strokeStyle = '#cc2200';
-  if (explosion.timer > 21) ctx.strokeStyle = '#aa0000';
-  if (explosion.timer > 24) ctx.strokeStyle = '#990000';
-  if (explosion.timer > 27) ctx.strokeStyle = '#660000';
-  if (explosion.timer > 29) ctx.strokeStyle = '#330000';
-  ctx.beginPath();
-  ctx.arc(explosion.x, explosion.y, explosion.radius * 6.5, 0, 2 * Math.PI);
-  ctx.stroke();
-};
-
-export default { createExplosion, moveExplosion, drawExplosion };
+export default { createExplosion, moveExplosion };

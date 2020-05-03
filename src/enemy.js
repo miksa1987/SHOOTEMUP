@@ -4,8 +4,8 @@ import {
   RADIUS_MULTIPLIER,
   ENEMY_ACCURACY,
   distance,
-} from './commons';
-import { player } from './player';
+} from "./commons";
+import { player } from "./player";
 
 export const initEnemy = () => {
   const enemy = {
@@ -31,29 +31,6 @@ export const initEnemy = () => {
   }
 
   return enemy;
-};
-
-export const drawEnemy = (enemy, ctx) => {
-  ctx.strokeStyle = 'red';
-  ctx.fillStyle = 'red';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(enemy.x, enemy.y, enemy.radius * RADIUS_MULTIPLIER, 0, 2 * Math.PI);
-  ctx.stroke();
-  ctx.fill();
-  ctx.strokeStyle = '#ff9900';
-  ctx.fillStyle = '#ff9900';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(
-    enemy.x,
-    enemy.y,
-    (enemy.radius / 2) * RADIUS_MULTIPLIER,
-    0,
-    2 * Math.PI
-  );
-  ctx.stroke();
-  ctx.fill();
 };
 
 export const shoot = (enemy) => {
